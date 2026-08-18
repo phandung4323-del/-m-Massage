@@ -62,6 +62,8 @@ export const AdminOrderModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
 
   const [orders, setOrders] = useState<SavedOrder[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -95,6 +97,7 @@ export const AdminOrderModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   // Change PIN state
   const [newPin, setNewPin] = useState('');
+  const [confirmNewPin, setConfirmNewPin] = useState('');
   const [pinChangeNotice, setPinChangeNotice] = useState<string | null>(null);
 
   const loadOrders = () => {
@@ -112,6 +115,7 @@ export const AdminOrderModal: React.FC<Props> = ({ isOpen, onClose }) => {
     } else {
       setPinError(false);
       setPinInput('');
+      setIsAuthenticated(false); // Always lock upon closing
     }
   }, [isOpen, isAuthenticated]);
 
@@ -125,15 +129,27 @@ export const AdminOrderModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  const isLockedOut = lockoutUntil !== null && Date.now() < lockoutUntil;
+
   const handleVerifyPin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLockedOut) return;
+
     const correctPin = getAdminPin();
     if (pinInput.trim() === correctPin) {
       setIsAuthenticated(true);
       setPinError(false);
+      setFailedAttempts(0);
+      setLockoutUntil(null);
       loadOrders();
     } else {
+      const nextFailed = failedAttempts + 1;
+      setFailedAttempts(nextFailed);
       setPinError(true);
+      if (nextFailed >= 5) {
+        // Lock out for 5 minutes
+        setLockoutUntil(Date.now() + 5 * 60 * 1000);
+      }
     }
   };
 
@@ -312,13 +328,18 @@ export const AdminOrderModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const handleChangePin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPin.trim() || newPin.length < 4) {
-      alert('Mật mã PIN phải có ít nhất 4 ký tự!');
+      alert('Mật khẩu quản trị phải có ít nhất 4 ký tự!');
+      return;
+    }
+    if (confirmNewPin && newPin !== confirmNewPin) {
+      alert('Mật khẩu xác nhận không khớp! Vui lòng nhập lại.');
       return;
     }
     setAdminPin(newPin.trim());
-    setPinChangeNotice('Đã cập nhật mật mã PIN mới!');
+    setPinChangeNotice('Đã cập nhật mật khẩu quản trị bảo mật mới thành công!');
     setNewPin('');
-    setTimeout(() => setPinChangeNotice(null), 3000);
+    setConfirmNewPin('');
+    setTimeout(() => setPinChangeNotice(null), 4000);
   };
 
   const filteredOrders = orders.filter((ord) => {
@@ -391,22 +412,37 @@ fbq('track', 'PageView');
     <div className="fixed inset-0 z-90 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
       <div className="bg-white w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-[#c4c6cf]/40 flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="bg-[#002045] p-5 text-white flex items-center justify-between shrink-0">
+        <div className="bg-[#002045] p-4 sm:p-5 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#ffdbd0] text-[#aa3000] flex items-center justify-center font-extrabold shadow-sm">
               <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-extrabold text-base sm:text-lg">Khu Vực Quản Trị Đơn Hàng & Chạy Quảng Cáo</h3>
+              <h3 className="font-extrabold text-base sm:text-lg">Khu Vực Quản Trị Bảo Mật</h3>
               <p className="text-[11px] text-[#adc7f7]">Chỉ chủ cửa hàng có mật mã mới truy cập được</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  setIsAuthenticated(false);
+                  onClose();
+                }}
+                className="px-3 py-1.5 bg-white/10 hover:bg-rose-600/80 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                title="Khóa ngay và đóng bảng quản trị"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Khóa & Đăng Xuất</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* PIN Verification Screen if not authenticated */}
@@ -417,46 +453,52 @@ fbq('track', 'PageView');
             </div>
 
             <div className="max-w-md space-y-2">
-              <h4 className="text-lg font-extrabold text-[#002045]">Nhập Mật Mã Quản Trị (PIN)</h4>
+              <h4 className="text-lg font-extrabold text-[#002045]">Xác Thực Quyền Quản Trị</h4>
               <p className="text-xs text-[#74777f]">
-                Để bảo mật thông tin khách hàng và cấu hình chạy quảng cáo, vui lòng nhập mã PIN quản trị viên.
-                <br />
-                <span className="text-[#aa3000] font-bold">(Mật mã mặc định ban đầu: 8888)</span>
+                Trang này được bảo vệ đa lớp. Vui lòng nhập mật khẩu quản trị bí mật để truy cập dữ liệu đơn hàng và cấu hình hệ thống.
               </p>
             </div>
 
-            <form onSubmit={handleVerifyPin} className="w-full max-w-xs space-y-3">
-              <div>
-                <input
-                  type="password"
-                  autoFocus
-                  placeholder="Nhập mã PIN (VD: 8888)"
-                  value={pinInput}
-                  onChange={(e) => {
-                    setPinInput(e.target.value);
-                    setPinError(false);
-                  }}
-                  className={`w-full py-3 px-4 text-center text-lg font-mono tracking-widest rounded-2xl border-2 focus:outline-none transition-all ${
-                    pinError
-                      ? 'border-rose-500 bg-rose-50 text-rose-800'
-                      : 'border-[#c4c6cf] focus:border-[#aa3000] bg-white'
-                  }`}
-                />
-                {pinError && (
-                  <p className="text-xs font-bold text-rose-600 mt-1.5 flex items-center justify-center gap-1">
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    Mã PIN không chính xác! Vui lòng thử lại.
-                  </p>
-                )}
+            {isLockedOut ? (
+              <div className="max-w-xs p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs font-bold space-y-1">
+                <ShieldAlert className="w-5 h-5 mx-auto text-rose-600" />
+                <p>Đã tạm khóa do nhập sai liên tiếp 5 lần!</p>
+                <p className="text-[11px] font-normal text-rose-600">Vui lòng đợi 5 phút rồi thử lại.</p>
               </div>
+            ) : (
+              <form onSubmit={handleVerifyPin} className="w-full max-w-xs space-y-3">
+                <div>
+                  <input
+                    type="password"
+                    autoFocus
+                    placeholder="Nhập mật khẩu / PIN quản trị"
+                    value={pinInput}
+                    onChange={(e) => {
+                      setPinInput(e.target.value);
+                      setPinError(false);
+                    }}
+                    className={`w-full py-3 px-4 text-center text-base font-mono tracking-widest rounded-2xl border-2 focus:outline-none transition-all ${
+                      pinError
+                        ? 'border-rose-500 bg-rose-50 text-rose-800'
+                        : 'border-[#c4c6cf] focus:border-[#aa3000] bg-white'
+                    }`}
+                  />
+                  {pinError && (
+                    <p className="text-xs font-bold text-rose-600 mt-1.5 flex items-center justify-center gap-1">
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      Mật khẩu không đúng! (Còn {5 - failedAttempts} lần thử)
+                    </p>
+                  )}
+                </div>
 
-              <button
-                type="submit"
-                className="w-full py-3 bg-[#aa3000] hover:bg-[#d43f00] text-white rounded-2xl font-extrabold text-sm shadow-md transition-colors cursor-pointer"
-              >
-                MỞ KHÓA QUẢN TRỊ
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-[#aa3000] hover:bg-[#d43f00] text-white rounded-2xl font-extrabold text-sm shadow-md transition-colors cursor-pointer"
+                >
+                  MỞ KHÓA BẢNG QUẢN TRỊ
+                </button>
+              </form>
+            )}
           </div>
         ) : (
           /* Authenticated Dashboard */
@@ -1011,23 +1053,37 @@ fbq('track', 'PageView');
               <div className="p-6 overflow-y-auto space-y-4 max-w-md text-xs sm:text-sm text-[#43474e]">
                 <h4 className="font-extrabold text-sm text-[#002045] flex items-center gap-2">
                   <KeyRound className="w-4 h-4 text-[#aa3000]" />
-                  <span>Thay Đổi Mật Mã PIN Quản Trị</span>
+                  <span>Đổi Mật Khẩu Quản Trị Riêng Tư</span>
                 </h4>
                 <p className="text-xs text-[#74777f]">
-                  Đặt một mật mã PIN bí mật của riêng bạn (ít nhất 4 ký tự) để chỉ bạn mới mở được danh sách đơn hàng.
+                  Đặt một mật khẩu bí mật của riêng bạn (chữ hoặc số, ít nhất 4 ký tự) để đảm bảo 100% chỉ có một mình bạn mới mở được bảng quản trị.
                 </p>
 
                 <form onSubmit={handleChangePin} className="space-y-3 pt-2">
                   <div>
                     <label className="block text-xs font-bold text-[#1a365d] mb-1">
-                      Mã PIN mới:
+                      Mật khẩu mới của bạn:
                     </label>
                     <input
                       type="password"
                       required
-                      placeholder="Nhập mã PIN mới (VD: 9999)"
+                      placeholder="Nhập mật khẩu mới"
                       value={newPin}
                       onChange={(e) => setNewPin(e.target.value)}
+                      className="w-full p-3 text-sm rounded-xl border border-[#c4c6cf] font-mono bg-[#f7fafc]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#1a365d] mb-1">
+                      Nhập lại mật khẩu mới:
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Xác nhận lại mật khẩu mới"
+                      value={confirmNewPin}
+                      onChange={(e) => setConfirmNewPin(e.target.value)}
                       className="w-full p-3 text-sm rounded-xl border border-[#c4c6cf] font-mono bg-[#f7fafc]"
                     />
                   </div>
@@ -1036,11 +1092,11 @@ fbq('track', 'PageView');
                     type="submit"
                     className="px-5 py-2.5 bg-[#aa3000] hover:bg-[#d43f00] text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
                   >
-                    Lưu Mã PIN Mới
+                    Lưu Mật Khẩu Bảo Mật Mới
                   </button>
 
                   {pinChangeNotice && (
-                    <p className="text-xs font-bold text-emerald-700 bg-emerald-50 p-2 rounded-xl">
+                    <p className="text-xs font-bold text-emerald-700 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
                       ✓ {pinChangeNotice}
                     </p>
                   )}
