@@ -11,6 +11,7 @@ import { PRICING_PACKAGES } from '../data/productData';
 import { OrderFormData } from '../types';
 import { OrderSuccessModal } from './OrderSuccessModal';
 import { saveNewOrder } from '../services/orderStorage';
+import { trackInitiateCheckout, trackPurchase } from '../services/pixelTracking';
 
 export const OrderSection: React.FC = () => {
   const [selectedComboId, setSelectedComboId] = useState('single');
@@ -49,6 +50,8 @@ export const OrderSection: React.FC = () => {
       setSubmittedOrder(currentOrderData);
       // Save order to persistent storage
       saveNewOrder(currentOrderData, generatedCode, currentCombo.title, finalPrice);
+      // Track conversion in Facebook Pixel & TikTok Pixel
+      trackPurchase(generatedCode, currentCombo.title, finalPrice, formData.quantity || 1);
       setIsSubmitting(false);
       setOrderSuccess(true);
     }, 500);
@@ -76,7 +79,10 @@ export const OrderSection: React.FC = () => {
             return (
               <div
                 key={pkg.id}
-                onClick={() => setSelectedComboId(pkg.id)}
+                onClick={() => {
+                  setSelectedComboId(pkg.id);
+                  trackInitiateCheckout(pkg.title, pkg.price + pkg.shippingFee);
+                }}
                 className={`p-5 rounded-3xl border-2 transition-all cursor-pointer flex flex-col justify-between relative ${
                   isSelected
                     ? 'border-[#aa3000] bg-white soft-shadow-lg scale-102'

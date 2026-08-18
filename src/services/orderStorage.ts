@@ -1,6 +1,78 @@
 import { OrderFormData, SavedOrder, OrderStatus } from '../types';
 
 const STORAGE_KEY = 'small_customer_orders_v1';
+const ADMIN_PIN_KEY = 'small_admin_pin_code';
+const TELEGRAM_CONFIG_KEY = 'small_telegram_config';
+
+export interface TelegramConfig {
+  botToken: string;
+  chatId: string;
+  enabled: boolean;
+}
+
+export function getAdminPin(): string {
+  return localStorage.getItem(ADMIN_PIN_KEY) || '8888';
+}
+
+export function setAdminPin(newPin: string) {
+  localStorage.setItem(ADMIN_PIN_KEY, newPin.trim());
+}
+
+export function getTelegramConfig(): TelegramConfig {
+  try {
+    const raw = localStorage.getItem(TELEGRAM_CONFIG_KEY);
+    if (!raw) return { botToken: '', chatId: '', enabled: false };
+    return JSON.parse(raw);
+  } catch {
+    return { botToken: '', chatId: '', enabled: false };
+  }
+}
+
+export function saveTelegramConfig(config: TelegramConfig) {
+  localStorage.setItem(TELEGRAM_CONFIG_KEY, JSON.stringify(config));
+}
+
+/**
+ * Send order notification directly to Telegram (Private & Instant)
+ */
+export async function sendTelegramNotification(order: SavedOrder): Promise<boolean> {
+  const config = getTelegramConfig();
+  if (!config.enabled || !config.botToken.trim() || !config.chatId.trim()) {
+    return false;
+  }
+
+  try {
+    const message = `🔥 <b>ĐƠN HÀNG MỚI - S-MALL MASSAGE</b> 🔥
+━━━━━━━━━━━━━━━━━━
+📦 <b>Mã đơn:</b> <code>${order.orderCode}</code>
+⏰ <b>Thời gian:</b> ${order.createdAt}
+👤 <b>Khách hàng:</b> <b>${order.fullName}</b>
+📞 <b>Số điện thoại:</b> <code>${order.phone}</code>
+📍 <b>Địa chỉ:</b> ${order.address}, ${order.city}
+🎁 <b>Sản phẩm:</b> ${order.comboTitle} (SL: ${order.quantity})
+💰 <b>Tổng tiền:</b> <b>${order.totalPrice.toLocaleString('vi-VN')} đ</b>
+💳 <b>Thanh toán:</b> ${order.paymentMethod === 'cod' ? 'COD (Nhận hàng thanh toán)' : 'Chuyển khoản / Quét QR'}
+📝 <b>Ghi chú:</b> ${order.note || 'Không có'}
+━━━━━━━━━━━━━━━━━━
+<i>⚡ Vui lòng gọi điện xác nhận trong 15 phút!</i>`;
+
+    const url = `https://api.telegram.org/bot${config.botToken.trim()}/sendMessage`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: config.chatId.trim(),
+        text: message,
+        parse_mode: 'HTML',
+      }),
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.error('Error sending Telegram notification:', error);
+    return false;
+  }
+}
 
 export function getStoredOrders(): SavedOrder[] {
   try {
@@ -41,6 +113,9 @@ export function saveNewOrder(
 
   const updated = [newOrder, ...currentOrders];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+  // Send instant private Telegram alert
+  sendTelegramNotification(newOrder);
 
   // Dispatch custom event for real-time reactivity in UI
   if (typeof window !== 'undefined') {

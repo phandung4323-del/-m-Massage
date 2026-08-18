@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Phone, MapPin, ClipboardList } from 'lucide-react';
+import { ShieldCheck, Phone, MapPin, Lock } from 'lucide-react';
 import { AdminOrderModal } from './AdminOrderModal';
 
 export const Footer: React.FC = () => {
@@ -49,25 +49,26 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Admin Order Portal & Policies Links */}
-          <div className="flex justify-center flex-wrap items-center gap-4 sm:gap-6 mb-6 text-xs font-semibold">
+          {/* Policies & Discrete Admin Link */}
+          <div className="flex justify-center flex-wrap items-center gap-4 sm:gap-6 mb-6 text-xs font-medium text-[#74777f]">
+            <a className="hover:text-[#aa3000] transition-colors" href="#hero">
+              Chính sách bảo mật
+            </a>
+            <a className="hover:text-[#aa3000] transition-colors" href="#hero">
+              Điều khoản dịch vụ
+            </a>
+            <a className="hover:text-[#aa3000] transition-colors" href="#hero">
+              Chính sách đổi trả & hoàn tiền
+            </a>
             <button
               type="button"
               onClick={() => setIsAdminOpen(true)}
-              className="inline-flex items-center gap-1 text-emerald-800 hover:text-emerald-950 bg-emerald-100/80 px-3 py-1 rounded-full cursor-pointer transition-colors"
+              className="hover:text-[#002045] transition-colors inline-flex items-center gap-1 opacity-60 hover:opacity-100 cursor-pointer"
+              title="Quản trị viên (Khóa bảo mật)"
             >
-              <ClipboardList className="w-3.5 h-3.5" />
-              <span>Xem danh sách đơn hàng đã đặt (Admin)</span>
+              <Lock className="w-3 h-3" />
+              <span>Quản trị</span>
             </button>
-            <a className="text-[#43474e] hover:text-[#aa3000] transition-colors" href="#hero">
-              Chính sách bảo mật
-            </a>
-            <a className="text-[#43474e] hover:text-[#aa3000] transition-colors" href="#hero">
-              Điều khoản dịch vụ
-            </a>
-            <a className="text-[#43474e] hover:text-[#aa3000] transition-colors" href="#hero">
-              Chính sách đổi trả & hoàn tiền
-            </a>
           </div>
 
           <p className="text-xs text-[#74777f]">

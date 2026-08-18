@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { PainPointsSection } from './components/PainPointsSection';
@@ -16,8 +16,13 @@ import { ReviewsAndFaqSection } from './components/ReviewsAndFaqSection';
 import { OrderSection } from './components/OrderSection';
 import { Footer } from './components/Footer';
 import { BottomStickyBar } from './components/BottomStickyBar';
+import { initTrackingPixels } from './services/pixelTracking';
 
 export default function App() {
+  useEffect(() => {
+    initTrackingPixels();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#f7fafc] text-[#181c1e] flex flex-col selection:bg-[#ffdbd0] selection:text-[#aa3000]">
       {/* Top App Bar & Progress */}
