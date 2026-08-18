@@ -1,0 +1,6 @@
+{
+  "name": "Đệm Massage Toàn Thân Đa Năng - S-Mall",
+  "description": "Trang giới thiệu và đặt mua Đệm Massage Toàn Thân Đa Năng S-Mall cao cấp dành cho gia đình, văn phòng và xe hơi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
