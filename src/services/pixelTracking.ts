@@ -7,21 +7,29 @@ export interface PixelConfig {
 
 const PIXEL_CONFIG_KEY = 'small_tracking_pixel_config';
 
+export const DEFAULT_FACEBOOK_PIXEL_ID = '1427984942520629';
+
 export function getPixelConfig(): PixelConfig {
   try {
     const raw = localStorage.getItem(PIXEL_CONFIG_KEY);
     if (!raw) {
       return {
-        facebookPixelId: '',
+        facebookPixelId: DEFAULT_FACEBOOK_PIXEL_ID,
         tiktokPixelId: '',
         googleTagId: '',
         enabled: true,
       };
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return {
+      facebookPixelId: parsed.facebookPixelId || DEFAULT_FACEBOOK_PIXEL_ID,
+      tiktokPixelId: parsed.tiktokPixelId || '',
+      googleTagId: parsed.googleTagId || '',
+      enabled: parsed.enabled !== undefined ? parsed.enabled : true,
+    };
   } catch {
     return {
-      facebookPixelId: '',
+      facebookPixelId: DEFAULT_FACEBOOK_PIXEL_ID,
       tiktokPixelId: '',
       googleTagId: '',
       enabled: true,
@@ -193,7 +201,7 @@ export function trackInitiateCheckout(comboTitle: string, price: number) {
 export function trackPurchase(orderCode: string, comboTitle: string, price: number, quantity: number = 1) {
   if (typeof window === 'undefined') return;
 
-  // Facebook Purchase Event
+  // Facebook Purchase and Lead Event
   if ((window as any).fbq) {
     (window as any).fbq('track', 'Purchase', {
       content_type: 'product',
@@ -203,7 +211,12 @@ export function trackPurchase(orderCode: string, comboTitle: string, price: numb
       currency: 'VND',
       num_items: quantity,
     });
-    console.log(`[Tracking] Facebook Purchase event fired: ${orderCode} - ${price} VND`);
+    (window as any).fbq('track', 'Lead', {
+      content_name: comboTitle,
+      value: price,
+      currency: 'VND',
+    });
+    console.log(`[Tracking] Facebook Purchase & Lead event fired: ${orderCode} - ${price} VND`);
   }
 
   // TikTok Complete Payment Event

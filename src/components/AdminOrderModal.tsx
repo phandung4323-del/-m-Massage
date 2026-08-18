@@ -25,6 +25,8 @@ import {
   Check,
   HelpCircle,
   Copy,
+  Table,
+  ExternalLink,
 } from 'lucide-react';
 import { SavedOrder, OrderStatus } from '../types';
 import {
@@ -38,6 +40,11 @@ import {
   getTelegramConfig,
   saveTelegramConfig,
   TelegramConfig,
+  getGoogleSheetConfig,
+  saveGoogleSheetConfig,
+  sendGoogleSheetNotification,
+  GoogleSheetConfig,
+  resetAllToFactoryDefaults,
 } from '../services/orderStorage';
 import {
   getPixelConfig,
@@ -59,7 +66,15 @@ export const AdminOrderModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [orders, setOrders] = useState<SavedOrder[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'orders' | 'pixel' | 'telegram' | 'security'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'googlesheet' | 'telegram' | 'pixel' | 'security'>('orders');
+
+  // Google Sheets state
+  const [googleSheetConfig, setGoogleSheetConfigState] = useState<GoogleSheetConfig>({
+    webhookUrl: '',
+    enabled: true,
+  });
+  const [sheetSavedNotice, setSheetSavedNotice] = useState<string | null>(null);
+  const [copiedScript, setCopiedScript] = useState(false);
 
   // Pixel Config State
   const [pixelConfig, setPixelConfigState] = useState<PixelConfig>({
@@ -69,7 +84,6 @@ export const AdminOrderModal: React.FC<Props> = ({ isOpen, onClose }) => {
     enabled: true,
   });
   const [pixelSavedNotice, setPixelSavedNotice] = useState<string | null>(null);
-  const [copiedCode, setCopiedCode] = useState(false);
 
   // Telegram state
   const [telegramConfig, setTelegramConfigState] = useState<TelegramConfig>({
@@ -89,6 +103,7 @@ export const AdminOrderModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen) {
+      setGoogleSheetConfigState(getGoogleSheetConfig());
       setTelegramConfigState(getTelegramConfig());
       setPixelConfigState(getPixelConfig());
       if (isAuthenticated) {
@@ -157,6 +172,92 @@ export const AdminOrderModal: React.FC<Props> = ({ isOpen, onClose }) => {
       1490000
     );
     loadOrders();
+  };
+
+  const handleSaveGoogleSheet = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveGoogleSheetConfig(googleSheetConfig);
+    setSheetSavedNotice('Đã lưu cấu hình Google Sheets thành công!');
+    setTimeout(() => setSheetSavedNotice(null), 4000);
+  };
+
+  const handleTestGoogleSheet = async () => {
+    if (!googleSheetConfig.webhookUrl.trim()) {
+      alert('Vui lòng dán đường link Web App URL của Google Apps Script trước khi test!');
+      return;
+    }
+    const sampleTestOrder: SavedOrder = {
+      id: 'test_sheet_' + Date.now(),
+      orderCode: 'TEST-' + Math.floor(100000 + Math.random() * 900000),
+      createdAt: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      fullName: 'Khách Thử Nghiệm Google Sheets',
+      phone: '0988888888',
+      address: '123 Đường Số 1, Phường 2',
+      city: 'Hà Nội',
+      comboTitle: 'COMBO 1: 1 Đệm Massage Toàn Thân S-MALL',
+      quantity: 1,
+      totalPrice: 1490000,
+      paymentMethod: 'cod',
+      note: 'Đơn thử nghiệm kiểm tra đồng bộ Google Sheet',
+      status: 'Chờ xác nhận',
+    };
+
+    saveGoogleSheetConfig(googleSheetConfig);
+    await sendGoogleSheetNotification(sampleTestOrder);
+    alert('Đã gửi 1 dòng đơn hàng thử nghiệm sang Google Sheets! Hãy mở file Google Sheet của bạn để xem kết quả xuất hiện ngay.');
+  };
+
+  const googleAppsScriptCode = `function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    
+    // Tự động tạo tiêu đề các cột nếu trang tính mới tinh
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        "Thời Gian",
+        "Mã Đơn",
+        "Họ Tên Khách",
+        "Số Điện Thoại",
+        "Địa Chỉ",
+        "Tỉnh / TP",
+        "Sản Phẩm Đặt",
+        "Số Lượng",
+        "Tổng Tiền",
+        "Thanh Toán",
+        "Ghi Chú",
+        "Trạng Thái"
+      ]);
+      sheet.getRange(1, 1, 1, 12).setFontWeight("bold").setBackground("#002045").setFontColor("#ffffff");
+    }
+    
+    var data = JSON.parse(e.postData.contents);
+    sheet.appendRow([
+      data.createdAt || new Date().toLocaleString("vi-VN"),
+      data.orderCode || "",
+      data.fullName || "",
+      "'" + (data.phone || ""),
+      data.address || "",
+      data.city || "",
+      data.comboTitle || "",
+      data.quantity || 1,
+      Number(data.totalPrice || 0).toLocaleString("vi-VN") + " đ",
+      data.paymentMethod || "",
+      data.note || "",
+      data.status || "Chờ xác nhận"
+    ]);
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+  const copyScriptToClipboard = () => {
+    navigator.clipboard.writeText(googleAppsScriptCode);
+    setCopiedScript(true);
+    setTimeout(() => setCopiedScript(false), 2500);
   };
 
   const handleSavePixel = (e: React.FormEvent) => {
@@ -375,15 +476,15 @@ fbq('track', 'PageView');
               </button>
 
               <button
-                onClick={() => setActiveTab('pixel')}
+                onClick={() => setActiveTab('googlesheet')}
                 className={`pb-2.5 px-3 text-xs font-extrabold flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-                  activeTab === 'pixel'
+                  activeTab === 'googlesheet'
                     ? 'border-[#aa3000] text-[#aa3000]'
                     : 'border-transparent text-[#74777f] hover:text-[#002045]'
                 }`}
               >
-                <Target className="w-4 h-4 text-indigo-600" />
-                <span>Cài Facebook / TikTok Pixel</span>
+                <Table className="w-4 h-4 text-emerald-600" />
+                <span>Đồng Bộ Google Sheets</span>
               </button>
 
               <button
@@ -396,6 +497,18 @@ fbq('track', 'PageView');
               >
                 <Send className="w-4 h-4 text-blue-500" />
                 <span>Bắn Đơn Telegram</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('pixel')}
+                className={`pb-2.5 px-3 text-xs font-extrabold flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
+                  activeTab === 'pixel'
+                    ? 'border-[#aa3000] text-[#aa3000]'
+                    : 'border-transparent text-[#74777f] hover:text-[#002045]'
+                }`}
+              >
+                <Target className="w-4 h-4 text-indigo-600" />
+                <span>Cài Facebook / TikTok Pixel</span>
               </button>
 
               <button
@@ -572,6 +685,132 @@ fbq('track', 'PageView');
                   )}
                 </div>
               </>
+            )}
+
+            {/* TAB: GOOGLE SHEETS SYNC */}
+            {activeTab === 'googlesheet' && (
+              <div className="p-6 overflow-y-auto space-y-6 text-xs sm:text-sm text-[#43474e]">
+                {/* Banner */}
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2">
+                  <div className="flex items-center gap-2 text-emerald-950 font-extrabold text-sm">
+                    <Table className="w-5 h-5 text-emerald-700" />
+                    <span>Đồng Bộ Đơn Hàng Tự Động Về Google Sheets (Bảng Tính Google)</span>
+                  </div>
+                  <p className="text-xs text-emerald-900 leading-relaxed">
+                    Mỗi khi có khách hàng đặt hàng ở bất kỳ đâu, hệ thống sẽ <strong>tự động ghi thêm 1 dòng mới vào file Google Sheet của bạn</strong> với đầy đủ: Thời gian, Mã đơn, Tên khách, Số điện thoại, Địa chỉ, Sản phẩm, Tổng tiền, Hình thức thanh toán và Ghi chú.
+                  </p>
+                </div>
+
+                {/* Form URL */}
+                <form onSubmit={handleSaveGoogleSheet} className="space-y-4 max-w-2xl">
+                  <div className="flex items-center gap-2 pb-1">
+                    <input
+                      type="checkbox"
+                      id="sheet-enabled"
+                      checked={googleSheetConfig.enabled}
+                      onChange={(e) => setGoogleSheetConfigState({ ...googleSheetConfig, enabled: e.target.checked })}
+                      className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                    />
+                    <label htmlFor="sheet-enabled" className="font-bold text-xs text-[#002045] cursor-pointer">
+                      Bật tính năng tự động ghi đơn hàng vào Google Sheets
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#1a365d] mb-1">
+                      Đường dẫn Google Apps Script Web App URL (Webhook URL):
+                    </label>
+                    <input
+                      type="url"
+                      required={googleSheetConfig.enabled}
+                      placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+                      value={googleSheetConfig.webhookUrl}
+                      onChange={(e) => setGoogleSheetConfigState({ ...googleSheetConfig, webhookUrl: e.target.value })}
+                      className="w-full p-2.5 text-xs rounded-xl border border-[#c4c6cf] font-mono bg-[#f7fafc] focus:outline-emerald-600"
+                    />
+                    <p className="text-[11px] text-[#74777f] mt-1">
+                      Dán đường link Web App bạn nhận được sau khi Triển khai Apps Script ở bên dưới.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center flex-wrap gap-3 pt-1">
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Lưu Cấu Hình Google Sheets</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleTestGoogleSheet}
+                      className="px-4 py-2.5 bg-[#002045] hover:bg-[#1a365d] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Gửi Thử 1 Đơn Mẫu Vào Sheet</span>
+                    </button>
+                  </div>
+
+                  {sheetSavedNotice && (
+                    <p className="text-xs font-bold text-emerald-900 bg-emerald-100 border border-emerald-300 p-3 rounded-xl">
+                      ✓ {sheetSavedNotice}
+                    </p>
+                  )}
+                </form>
+
+                {/* Step-by-step instructions */}
+                <div className="border-t border-[#e0e3e5] pt-5 space-y-4">
+                  <h4 className="font-extrabold text-sm text-[#002045] flex items-center gap-2">
+                    <HelpCircle className="w-4 h-4 text-emerald-600" />
+                    <span>Hướng Dẫn 3 Phút Để Tạo & Kết Nối Google Sheet</span>
+                  </h4>
+
+                  <div className="space-y-3 text-xs leading-relaxed text-[#43474e]">
+                    <div className="p-3.5 bg-[#f7fafc] rounded-xl border border-[#e0e3e5] space-y-1">
+                      <p className="font-bold text-[#002045]">
+                        Bước 1: Tạo Google Sheet & Mở Apps Script
+                      </p>
+                      <p className="text-[#74777f]">
+                        Vào <a href="https://sheets.new" target="_blank" rel="noreferrer" className="text-emerald-700 font-bold underline inline-flex items-center gap-0.5">Google Sheets mới <ExternalLink className="w-3 h-3 inline" /></a> → Trên thanh menu chọn <strong>Tiện ích mở rộng (Extensions)</strong> → Chọn <strong>Apps Script</strong>.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-[#f7fafc] rounded-xl border border-[#e0e3e5] space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="font-bold text-[#002045]">
+                          Bước 2: Dán Đoạn Mã Google Apps Script Này
+                        </p>
+                        <button
+                          type="button"
+                          onClick={copyScriptToClipboard}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          {copiedScript ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                          <span>{copiedScript ? 'Đã sao chép!' : 'Sao chép mã'}</span>
+                        </button>
+                      </div>
+                      <p className="text-[#74777f]">Xóa sạch mã có sẵn trong file <code>Code.gs</code> và dán mã bên dưới vào:</p>
+                      <pre className="p-3 bg-[#181c1e] text-emerald-300 rounded-xl text-[11px] font-mono overflow-x-auto max-h-48 border border-[#2d3133]">
+                        {googleAppsScriptCode}
+                      </pre>
+                    </div>
+
+                    <div className="p-3.5 bg-[#f7fafc] rounded-xl border border-[#e0e3e5] space-y-1.5">
+                      <p className="font-bold text-[#002045]">
+                        Bước 3: Triển khai (Deploy) Web App & Lấy Link
+                      </p>
+                      <ul className="list-disc pl-5 space-y-1 text-[#52575c]">
+                        <li>Bấm nút <strong>Triển khai (Deploy)</strong> ở góc trên bên phải → Chọn <strong>Tùy chọn triển khai mới (New deployment)</strong>.</li>
+                        <li>Bấm vào biểu tượng bánh răng bên cạnh "Chọn loại" → Chọn <strong>Ứng dụng web (Web app)</strong>.</li>
+                        <li>Tại mục <strong>Thực thi dưới dạng (Execute as)</strong>: Chọn <strong>Tôi (Email của bạn)</strong>.</li>
+                        <li>Tại mục <strong>Ai có quyền truy cập (Who has access)</strong>: Chọn <strong>Bất kỳ ai (Anyone)</strong>.</li>
+                        <li>Bấm <strong>Triển khai (Deploy)</strong> → Chọn <em>Trao quyền truy cập (Authorize access)</em> → Sao chép đường link <strong>URL ứng dụng web (Web app URL)</strong> và dán vào ô nhập bên trên.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* TAB 2: FACEBOOK / TIKTOK PIXEL TRACKING CONFIG */}
@@ -806,6 +1045,33 @@ fbq('track', 'PageView');
                     </p>
                   )}
                 </form>
+
+                {/* Factory Reset Section */}
+                <div className="border-t border-[#e0e3e5] pt-4 mt-6 space-y-2">
+                  <h5 className="font-extrabold text-xs text-red-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Khôi Phục Cài Đặt Gốc (Xóa Sạch Dữ Liệu)</span>
+                  </h5>
+                  <p className="text-[11px] text-[#74777f]">
+                    Xóa sạch toàn bộ đơn hàng lưu tạm, cấu hình Google Sheet, Telegram và khôi phục mã PIN về mặc định (8888).
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Bạn có chắc chắn muốn xóa sạch toàn bộ dữ liệu và khôi phục về cài đặt gốc ban đầu?')) {
+                        resetAllToFactoryDefaults();
+                        setOrders([]);
+                        setGoogleSheetConfigState({ webhookUrl: '', enabled: false });
+                        setTelegramConfigState({ botToken: '', chatId: '', enabled: false });
+                        alert('Đã khôi phục toàn bộ cài đặt gốc thành công! Mã PIN mặc định là: 8888');
+                        onClose();
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    Khôi Phục Cài Đặt Gốc Ban Đầu
+                  </button>
+                </div>
               </div>
             )}
           </>
