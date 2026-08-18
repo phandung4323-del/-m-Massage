@@ -1,17 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, PhoneCall, ShoppingCart } from 'lucide-react';
+import { Sparkles, PhoneCall, ShoppingCart, ClipboardList } from 'lucide-react';
+import { getStoredOrders } from '../services/orderStorage';
+import { AdminOrderModal } from './AdminOrderModal';
 
 export const Header: React.FC = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [orderCount, setOrderCount] = useState(0);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+
+  const updateCount = () => {
+    const orders = getStoredOrders();
+    setOrderCount(orders.length);
+  };
 
   useEffect(() => {
+    updateCount();
     const handleScroll = () => {
       const totalScroll = document.documentElement.scrollHeight - document.documentElement.clientHeight;
       const currentProgress = (window.scrollY / totalScroll) * 100;
       setScrollProgress(currentProgress);
     };
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('orders_updated', updateCount);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('orders_updated', updateCount);
+    };
   }, []);
 
   return (
@@ -39,7 +54,7 @@ export const Header: React.FC = () => {
             </div>
           </a>
 
-          <nav className="hidden md:flex items-center gap-7">
+          <nav className="hidden md:flex items-center gap-6">
             <a className="text-[#002045] font-semibold hover:text-[#aa3000] transition-colors duration-200" href="#hero">
               Trang chủ
             </a>
@@ -57,19 +72,33 @@ export const Header: React.FC = () => {
             </a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Admin Order List Button */}
+            <button
+              type="button"
+              onClick={() => setIsAdminModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold transition-all shadow-xs cursor-pointer"
+              title="Xem danh sách khách đặt hàng"
+            >
+              <ClipboardList className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden sm:inline">Xem đơn đặt</span>
+              <span className="bg-emerald-600 text-white px-1.5 py-0.2 rounded-full text-[10px] font-mono">
+                {orderCount}
+              </span>
+            </button>
+
             <a
               href="tel:0398636869"
               className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#002045]/20 text-[#002045] text-xs font-bold hover:bg-[#002045]/5 transition-colors"
             >
               <PhoneCall className="w-3.5 h-3.5 text-[#aa3000]" />
-              <span>Hotline: 0398.636.869</span>
+              <span>0398.636.869</span>
             </a>
 
             <a
               id="header-cta-btn"
               href="#order"
-              className="px-4 py-2 bg-[#aa3000] text-white rounded-lg text-sm font-bold flex items-center gap-1.5 hover:bg-[#d43f00] transition-all shadow-sm"
+              className="px-4 py-2 bg-[#aa3000] text-white rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 hover:bg-[#d43f00] transition-all shadow-sm"
             >
               <ShoppingCart className="w-4 h-4" />
               <span>ĐẶT HÀNG</span>
@@ -77,6 +106,12 @@ export const Header: React.FC = () => {
           </div>
         </div>
       </header>
+
+      {/* Admin Order Management Modal */}
+      <AdminOrderModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+      />
     </>
   );
 };

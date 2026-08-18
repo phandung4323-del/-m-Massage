@@ -1,7 +1,6 @@
 import React from 'react';
-import { CheckCircle, PhoneCall, Package, X, FileSpreadsheet, ExternalLink } from 'lucide-react';
+import { CheckCircle, PhoneCall, Package, X } from 'lucide-react';
 import { OrderFormData } from '../types';
-import { SPREADSHEET_URL } from '../services/googleSheets';
 
 interface Props {
   isOpen: boolean;
@@ -9,8 +8,6 @@ interface Props {
   orderData: OrderFormData | null;
   totalPrice: number;
   orderCode: string;
-  sheetSynced?: boolean;
-  sheetMessage?: string;
 }
 
 export const OrderSuccessModal: React.FC<Props> = ({
@@ -19,8 +16,6 @@ export const OrderSuccessModal: React.FC<Props> = ({
   orderData,
   totalPrice,
   orderCode,
-  sheetSynced = true,
-  sheetMessage,
 }) => {
   if (!isOpen || !orderData) return null;
 
@@ -46,23 +41,6 @@ export const OrderSuccessModal: React.FC<Props> = ({
 
         {/* Order Details Receipt */}
         <div className="p-6 space-y-4 text-xs sm:text-sm">
-          {/* Google Sheets Sync Badge */}
-          <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-emerald-800 text-xs font-semibold">
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>{sheetMessage || 'Đã tự động đổ dữ liệu đơn hàng về Google Sheets'}</span>
-            </div>
-            <a
-              href={SPREADSHEET_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 shrink-0 underline"
-            >
-              <span>Xem Sheet</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-
           <div className="bg-[#f1f4f6] p-4 rounded-2xl border border-[#e0e3e5] space-y-2">
             <div className="flex justify-between">
               <span className="text-[#74777f]">Mã đơn hàng:</span>

@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { ShoppingCart, ShieldCheck, Truck, Check, QrCode, Banknote, FileSpreadsheet, ExternalLink, RefreshCw, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  ShoppingCart,
+  ShieldCheck,
+  Truck,
+  Check,
+  QrCode,
+  Banknote,
+} from 'lucide-react';
 import { PRICING_PACKAGES } from '../data/productData';
 import { OrderFormData } from '../types';
 import { OrderSuccessModal } from './OrderSuccessModal';
-import {
-  appendOrderToGoogleSheet,
-  getStoredAccessToken,
-  requestGoogleAccessToken,
-  SPREADSHEET_URL,
-  TARGET_SPREADSHEET_ID,
-} from '../services/googleSheets';
+import { saveNewOrder } from '../services/orderStorage';
 
 export const OrderSection: React.FC = () => {
   const [selectedComboId, setSelectedComboId] = useState('single');
@@ -29,34 +30,11 @@ export const OrderSection: React.FC = () => {
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [submittedOrder, setSubmittedOrder] = useState<OrderFormData | null>(null);
   const [orderCode, setOrderCode] = useState('');
-  const [sheetSyncStatus, setSheetSyncStatus] = useState<string>('');
-  const [isGoogleConnected, setIsGoogleConnected] = useState<boolean>(false);
-  const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
-
-  useEffect(() => {
-    const token = getStoredAccessToken();
-    setIsGoogleConnected(!!token);
-  }, []);
-
-  const handleAuthorizeGoogle = () => {
-    setIsAuthorizing(true);
-    requestGoogleAccessToken(
-      (token) => {
-        setIsAuthorizing(false);
-        setIsGoogleConnected(true);
-        setSheetSyncStatus('Đã kết nối Google Sheets thành công!');
-      },
-      (err) => {
-        setIsAuthorizing(false);
-        console.log('Google Auth status:', err);
-      }
-    );
-  };
 
   const currentCombo = PRICING_PACKAGES.find((p) => p.id === selectedComboId) || PRICING_PACKAGES[0];
   const finalPrice = currentCombo.price + currentCombo.shippingFee;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName.trim() || !formData.phone.trim() || !formData.address.trim()) {
       alert('Vui lòng điền đầy đủ Họ tên, Số điện thoại và Địa chỉ nhận hàng!');
@@ -64,31 +42,16 @@ export const OrderSection: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    const generatedCode = `SM-${Math.floor(100000 + Math.random() * 900000)}`;
-    setOrderCode(generatedCode);
-    const currentOrderData = { ...formData, comboId: selectedComboId };
-    setSubmittedOrder(currentOrderData);
-
-    // Sync order to Google Sheets
-    try {
-      const syncResult = await appendOrderToGoogleSheet(
-        currentOrderData,
-        generatedCode,
-        currentCombo.title,
-        finalPrice
-      );
-      if (syncResult.success) {
-        setSheetSyncStatus('Dữ liệu đơn hàng đã đổ về Google Sheets thành công!');
-      } else {
-        setSheetSyncStatus(syncResult.message);
-      }
-    } catch (error) {
-      console.error('Error syncing order to sheet:', error);
-      setSheetSyncStatus('Đã ghi nhận đơn hàng tại hệ thống.');
-    } finally {
+    setTimeout(() => {
+      const generatedCode = `SM-${Math.floor(100000 + Math.random() * 900000)}`;
+      setOrderCode(generatedCode);
+      const currentOrderData = { ...formData, comboId: selectedComboId };
+      setSubmittedOrder(currentOrderData);
+      // Save order to persistent storage
+      saveNewOrder(currentOrderData, generatedCode, currentCombo.title, finalPrice);
       setIsSubmitting(false);
       setOrderSuccess(true);
-    }
+    }, 500);
   };
 
   return (
@@ -104,27 +67,6 @@ export const OrderSection: React.FC = () => {
           <p className="text-xs sm:text-sm text-[#43474e] mt-2 max-w-lg mx-auto">
             Cam kết 100% hàng chính hãng S-Mall. Kiểm tra hàng và thử máy trước khi thanh toán.
           </p>
-
-          {/* Google Sheet Live Connection Bar */}
-          <div className="mt-4 inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white border border-emerald-300/80 shadow-xs text-xs text-[#002045]">
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="font-semibold">
-              Google Sheet: <span className="font-mono text-emerald-700 font-bold">1fMOwGELlzRKmk1...</span>
-            </span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Tự động đổ data
-            </span>
-            <a
-              href={SPREADSHEET_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-700 hover:text-emerald-900 font-bold flex items-center gap-0.5 underline ml-1"
-            >
-              <span>Mở bảng</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
         </div>
 
         {/* Combos Selection */}
@@ -196,30 +138,10 @@ export const OrderSection: React.FC = () => {
         {/* Order Form Card */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 soft-shadow-lg border border-[#c4c6cf]/40">
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e0e3e5] flex-wrap gap-2">
-              <h3 className="text-lg font-extrabold text-[#002045] flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-[#aa3000]" />
-                <span>Thông Tin Người Nhận Hàng</span>
-              </h3>
-              <div className="flex items-center gap-2 text-xs">
-                {isGoogleConnected ? (
-                  <span className="inline-flex items-center gap-1 text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Đã liên kết Google Sheets
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleAuthorizeGoogle}
-                    disabled={isAuthorizing}
-                    className="inline-flex items-center gap-1.5 text-xs text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-xl font-bold transition-colors cursor-pointer"
-                  >
-                    <FileSpreadsheet className="w-3.5 h-3.5" />
-                    <span>{isAuthorizing ? 'Đang kết nối...' : 'Xác thực Google Sheets'}</span>
-                  </button>
-                )}
-              </div>
-            </div>
+            <h3 className="text-lg font-extrabold text-[#002045] flex items-center gap-2 pb-3 border-b border-[#e0e3e5]">
+              <ShoppingCart className="w-5 h-5 text-[#aa3000]" />
+              <span>Thông Tin Người Nhận Hàng</span>
+            </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -373,7 +295,7 @@ export const OrderSection: React.FC = () => {
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Đang ghi nhận đơn hàng & đổ dữ liệu về Google Sheets...</span>
+                  <span>Đang ghi nhận đơn hàng...</span>
                 </div>
               ) : (
                 <>
@@ -393,10 +315,6 @@ export const OrderSection: React.FC = () => {
                 <Truck className="w-4 h-4 text-emerald-600" />
                 Giao hàng toàn quốc 2-3 ngày
               </span>
-              <span className="flex items-center gap-1">
-                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                Đồng bộ trực tiếp Google Sheet
-              </span>
             </div>
           </form>
         </div>
@@ -409,8 +327,6 @@ export const OrderSection: React.FC = () => {
         orderData={submittedOrder}
         totalPrice={finalPrice}
         orderCode={orderCode}
-        sheetSynced={true}
-        sheetMessage={sheetSyncStatus}
       />
     </section>
   );

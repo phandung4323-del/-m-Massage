@@ -10,6 +10,24 @@ export interface OrderFormData {
   paymentMethod: 'cod' | 'banking';
 }
 
+export type OrderStatus = 'Chờ xác nhận' | 'Đã xác nhận' | 'Đang giao hàng' | 'Đã hoàn thành' | 'Đã hủy';
+
+export interface SavedOrder {
+  id: string;
+  orderCode: string;
+  createdAt: string;
+  fullName: string;
+  phone: string;
+  address: string;
+  city: string;
+  comboTitle: string;
+  quantity: number;
+  totalPrice: number;
+  paymentMethod: 'cod' | 'banking';
+  note: string;
+  status: OrderStatus;
+}
+
 export interface ReviewItem {
   id: string;
   name: string;
