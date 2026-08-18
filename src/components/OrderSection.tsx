@@ -8,6 +8,7 @@ import {
   Banknote,
 } from 'lucide-react';
 import { PRICING_PACKAGES } from '../data/productData';
+import { VIETNAM_PROVINCES } from '../data/provinces';
 import { OrderFormData } from '../types';
 import { OrderSuccessModal } from './OrderSuccessModal';
 import { saveNewOrder } from '../services/orderStorage';
@@ -189,15 +190,11 @@ export const OrderSection: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   className="w-full p-3 text-sm rounded-xl border border-[#c4c6cf] focus:outline-[#aa3000] focus:ring-2 focus:ring-[#ffdbd0] bg-[#f7fafc]"
                 >
-                  <option value="Hà Nội">Hà Nội</option>
-                  <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                  <option value="Đà Nẵng">Đà Nẵng</option>
-                  <option value="Hải Phòng">Hải Phòng</option>
-                  <option value="Cần Thơ">Cần Thơ</option>
-                  <option value="Bình Dương">Bình Dương</option>
-                  <option value="Đồng Nai">Đồng Nai</option>
-                  <option value="Quảng Ninh">Quảng Ninh</option>
-                  <option value="Tỉnh thành khác">Tỉnh thành khác...</option>
+                  {VIETNAM_PROVINCES.map((prov) => (
+                    <option key={prov} value={prov}>
+                      {prov}
+                    </option>
+                  ))}
                 </select>
               </div>
 
