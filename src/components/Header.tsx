@@ -5,6 +5,7 @@ import { AdminOrderModal } from './AdminOrderModal';
 export const Header: React.FC = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [logoClickCount, setLogoClickCount] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,14 +22,36 @@ export const Header: React.FC = () => {
       }
     };
 
+    // Secret URL detection: #admin or ?admin=true
+    const checkAdminUrl = () => {
+      if (window.location.hash === '#admin' || window.location.search.includes('admin=')) {
+        setIsAdminModalOpen(true);
+      }
+    };
+
+    checkAdminUrl();
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('hashchange', checkAdminUrl);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('hashchange', checkAdminUrl);
     };
   }, []);
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    // Secret 5 rapid clicks on logo to open Admin
+    setLogoClickCount((prev) => {
+      const next = prev + 1;
+      if (next >= 5) {
+        setIsAdminModalOpen(true);
+        return 0;
+      }
+      return next;
+    });
+  };
 
   return (
     <>
@@ -41,10 +64,10 @@ export const Header: React.FC = () => {
 
       <header className="bg-[#f7fafc]/90 backdrop-blur-md fixed top-0 w-full z-50 border-b border-[#c4c6cf]/40 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-          {/* Logo with 3-click secret admin trigger */}
-          <a
-            href="#hero"
-            className="flex items-center gap-2 group cursor-pointer"
+          {/* Logo with 5-click secret admin trigger */}
+          <div
+            onClick={handleLogoClick}
+            className="flex items-center gap-2 group cursor-pointer select-none"
             title="S-Mall Massage"
           >
             <span
@@ -61,7 +84,7 @@ export const Header: React.FC = () => {
                 Chăm sóc sức khỏe gia đình
               </span>
             </div>
-          </a>
+          </div>
 
           <nav className="hidden md:flex items-center gap-6">
             <a className="text-[#002045] font-semibold hover:text-[#aa3000] transition-colors duration-200" href="#hero">

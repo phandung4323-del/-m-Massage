@@ -49,7 +49,7 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Policies & Discrete Admin Link */}
+          {/* Policies Links */}
           <div className="flex justify-center flex-wrap items-center gap-4 sm:gap-6 mb-6 text-xs font-medium text-[#74777f]">
             <a className="hover:text-[#aa3000] transition-colors" href="#hero">
               Chính sách bảo mật
@@ -60,15 +60,6 @@ export const Footer: React.FC = () => {
             <a className="hover:text-[#aa3000] transition-colors" href="#hero">
               Chính sách đổi trả & hoàn tiền
             </a>
-            <button
-              type="button"
-              onClick={() => setIsAdminOpen(true)}
-              className="hover:text-[#002045] transition-colors inline-flex items-center gap-1 opacity-60 hover:opacity-100 cursor-pointer"
-              title="Quản trị viên (Khóa bảo mật)"
-            >
-              <Lock className="w-3 h-3" />
-              <span>Quản trị</span>
-            </button>
           </div>
 
           <p className="text-xs text-[#74777f]">
