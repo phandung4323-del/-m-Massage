@@ -1,4 +1,4 @@
-// Local IndexedDB Storage for Video Files
+// Dual Server & Local Storage for Product Video
 
 const DB_NAME = 'SMallLocalMediaDB';
 const STORE_NAME = 'media';
@@ -23,17 +23,19 @@ function openDB(): Promise<IDBDatabase> {
 }
 
 export async function saveLocalVideo(file: File | Blob): Promise<string> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.put(file, VIDEO_KEY);
-    req.onsuccess = () => {
-      const blobUrl = URL.createObjectURL(file);
-      resolve(blobUrl);
-    };
-    req.onerror = () => reject(req.error);
-  });
+  try {
+    const db = await openDB();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.put(file, VIDEO_KEY);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    console.warn('Local indexedDB save warning:', e);
+  }
+  return URL.createObjectURL(file);
 }
 
 export async function getSavedLocalVideo(): Promise<string | null> {
@@ -57,4 +59,46 @@ export async function getSavedLocalVideo(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+export async function uploadVideoToServer(file: File): Promise<string> {
+  // Save locally first for instant playback
+  await saveLocalVideo(file);
+
+  const formData = new FormData();
+  formData.append('video', file);
+
+  try {
+    const res = await fetch('/api/upload-video', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.url) return data.url;
+    }
+  } catch (err) {
+    console.warn('Server upload failed, falling back to local storage:', err);
+  }
+
+  const localUrl = await getSavedLocalVideo();
+  return localUrl || URL.createObjectURL(file);
+}
+
+export async function getServerVideoUrl(): Promise<string | null> {
+  try {
+    const res = await fetch('/api/video-status');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.exists && data.url) {
+        return data.url;
+      }
+    }
+  } catch (err) {
+    console.warn('Server video check error:', err);
+  }
+
+  // Fallback to local DB
+  return await getSavedLocalVideo();
 }

@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Flame, Activity, Zap, Sparkles, ShieldCheck, HeartPulse, CheckCircle2 } from 'lucide-react';
 import { PRODUCT_IMAGES } from '../data/productData';
 import videoPoster from '../assets/images/video_showcase_poster_1787040441038.jpg';
-import { getSavedLocalVideo } from '../services/videoStorage';
+import { getServerVideoUrl } from '../services/videoStorage';
 
 export const HeatAndVibrationSection: React.FC = () => {
   const [selectedIntensity, setSelectedIntensity] = useState<'mild' | 'medium' | 'strong'>('medium');
-  const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
+  const [serverVideoUrl, setServerVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadSaved() {
-      const saved = await getSavedLocalVideo();
+      const saved = await getServerVideoUrl();
       if (saved) {
-        setLocalVideoUrl(saved);
+        setServerVideoUrl(saved);
       }
     }
     loadSaved();
@@ -96,9 +96,9 @@ export const HeatAndVibrationSection: React.FC = () => {
 
         {/* Video Player Box - Protected against downloading or public altering */}
         <div className="relative bg-[#001026] rounded-3xl overflow-hidden shadow-2xl border-2 border-[#002045] max-w-3xl mx-auto aspect-video flex items-center justify-center">
-          {localVideoUrl ? (
+          {serverVideoUrl ? (
             <video
-              src={localVideoUrl}
+              src={serverVideoUrl}
               controls
               playsInline
               controlsList="nodownload noplaybackrate"
@@ -108,19 +108,13 @@ export const HeatAndVibrationSection: React.FC = () => {
               className="w-full h-full object-contain bg-black"
             />
           ) : (
-            <div className="relative w-full h-full">
-              <img
-                src={videoPoster}
-                alt="Đệm Massage S-MALL"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl text-white text-center">
-                  <p className="font-bold text-sm">Video Đệm Massage Trị Liệu S-MALL</p>
-                  <p className="text-xs text-white/80 mt-1">Trải nghiệm thực tế con lăn 3D, sưởi ấm và đệm rung</p>
-                </div>
-              </div>
-            </div>
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0&modestbranding=1"
+              title="Video trải nghiệm đệm massage S-MALL"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="w-full h-full border-0"
+            />
           )}
         </div>
 

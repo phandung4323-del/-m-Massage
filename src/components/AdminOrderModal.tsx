@@ -54,7 +54,7 @@ import {
   PixelConfig,
   trackPurchase,
 } from '../services/pixelTracking';
-import { saveLocalVideo, getSavedLocalVideo } from '../services/videoStorage';
+import { uploadVideoToServer, getServerVideoUrl } from '../services/videoStorage';
 
 interface Props {
   isOpen: boolean;
@@ -563,7 +563,7 @@ fbq('track', 'PageView');
               <button
                 onClick={() => {
                   setActiveTab('video');
-                  getSavedLocalVideo().then((v) => setCurrentVideoUrl(v));
+                  getServerVideoUrl().then((v) => setCurrentVideoUrl(v));
                 }}
                 className={`pb-2.5 px-3 text-xs font-extrabold flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
                   activeTab === 'video'
@@ -1088,8 +1088,8 @@ fbq('track', 'PageView');
                   <div className="w-12 h-12 mx-auto rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center">
                     <Upload className="w-6 h-6" />
                   </div>
-                  <h5 className="font-bold text-xs text-[#002045]">Tải video từ máy tính của bạn</h5>
-                  <p className="text-[11px] text-[#74777f]">Hỗ trợ file .mp4, .mov, .webm (Tự động lưu vào trình duyệt)</p>
+                  <h5 className="font-bold text-xs text-[#002045]">Tải video từ máy tính của bạn lên Máy Chủ Website</h5>
+                  <p className="text-[11px] text-[#74777f]">Hỗ trợ file .mp4, .mov, .webm (Tự động lưu lên server và hiển thị cho 100% khách hàng trên toàn quốc)</p>
                   
                   <input
                     ref={adminVideoInputRef}
@@ -1100,14 +1100,14 @@ fbq('track', 'PageView');
                       if (file) {
                         setVideoUploading(true);
                         try {
-                          const url = await saveLocalVideo(file);
+                          const url = await uploadVideoToServer(file);
                           setCurrentVideoUrl(url);
-                          setVideoNotice('Đã tải và lưu video sản phẩm mới thành công!');
+                          setVideoNotice('Đã tải video lên máy chủ website thành công! Tất cả khách hàng đều xem được.');
                           window.dispatchEvent(new Event('product_video_updated'));
-                          setTimeout(() => setVideoNotice(null), 4000);
-                        } catch (err) {
+                          setTimeout(() => setVideoNotice(null), 5000);
+                        } catch (err: any) {
                           console.error(err);
-                          alert('Có lỗi khi lưu video. Vui lòng thử lại!');
+                          alert(err.message || 'Có lỗi khi tải video lên máy chủ. Vui lòng thử lại!');
                         } finally {
                           setVideoUploading(false);
                         }
@@ -1123,7 +1123,7 @@ fbq('track', 'PageView');
                     className="px-4 py-2.5 bg-[#aa3000] hover:bg-[#d43f00] text-white rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
                   >
                     <Upload className="w-3.5 h-3.5" />
-                    <span>{videoUploading ? 'Đang nạp video...' : 'Chọn File Video Từ Máy Tính'}</span>
+                    <span>{videoUploading ? 'Đang tải video lên máy chủ...' : 'Chọn File Video Từ Máy Tính'}</span>
                   </button>
                 </div>
 
