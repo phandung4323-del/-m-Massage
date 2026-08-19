@@ -27,6 +27,8 @@ import {
   Copy,
   Table,
   ExternalLink,
+  Video,
+  Upload,
 } from 'lucide-react';
 import { SavedOrder, OrderStatus } from '../types';
 import {
@@ -52,6 +54,7 @@ import {
   PixelConfig,
   trackPurchase,
 } from '../services/pixelTracking';
+import { saveLocalVideo, getSavedLocalVideo } from '../services/videoStorage';
 
 interface Props {
   isOpen: boolean;
@@ -68,7 +71,11 @@ export const AdminOrderModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [orders, setOrders] = useState<SavedOrder[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'orders' | 'googlesheet' | 'telegram' | 'pixel' | 'security'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'googlesheet' | 'telegram' | 'pixel' | 'video' | 'security'>('orders');
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoNotice, setVideoNotice] = useState<string | null>(null);
+  const adminVideoInputRef = React.useRef<HTMLInputElement | null>(null);
 
   // Google Sheets state
   const [googleSheetConfig, setGoogleSheetConfigState] = useState<GoogleSheetConfig>({
@@ -551,6 +558,21 @@ fbq('track', 'PageView');
               >
                 <Target className="w-4 h-4 text-indigo-600" />
                 <span>Cài Facebook / TikTok Pixel</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab('video');
+                  getSavedLocalVideo().then((v) => setCurrentVideoUrl(v));
+                }}
+                className={`pb-2.5 px-3 text-xs font-extrabold flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
+                  activeTab === 'video'
+                    ? 'border-[#aa3000] text-[#aa3000]'
+                    : 'border-transparent text-[#74777f] hover:text-[#002045]'
+                }`}
+              >
+                <Video className="w-4 h-4 text-purple-600" />
+                <span>Quản Lý Video Sản Phẩm</span>
               </button>
 
               <button
@@ -1045,6 +1067,85 @@ fbq('track', 'PageView');
                     </p>
                   )}
                 </form>
+              </div>
+            )}
+
+            {/* TAB 5: VIDEO MANAGEMENT */}
+            {activeTab === 'video' && (
+              <div className="p-6 overflow-y-auto space-y-5 max-w-lg text-xs sm:text-sm text-[#43474e]">
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-sm text-[#002045] flex items-center gap-2">
+                    <Video className="w-4 h-4 text-purple-600" />
+                    <span>Quản Lý Video Giới Thiệu Sản Phẩm</span>
+                  </h4>
+                  <p className="text-xs text-[#74777f]">
+                    Chỉ bạn (người có mã PIN) mới có quyền tải lên hoặc thay đổi video. Khách hàng thông thường tuyệt đối không thể tải hay chỉnh sửa video này.
+                  </p>
+                </div>
+
+                {/* Upload Box */}
+                <div className="p-5 rounded-2xl bg-[#f7fafc] border-2 border-dashed border-[#c4c6cf] text-center space-y-3">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                    <Upload className="w-6 h-6" />
+                  </div>
+                  <h5 className="font-bold text-xs text-[#002045]">Tải video từ máy tính của bạn</h5>
+                  <p className="text-[11px] text-[#74777f]">Hỗ trợ file .mp4, .mov, .webm (Tự động lưu vào trình duyệt)</p>
+                  
+                  <input
+                    ref={adminVideoInputRef}
+                    type="file"
+                    accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setVideoUploading(true);
+                        try {
+                          const url = await saveLocalVideo(file);
+                          setCurrentVideoUrl(url);
+                          setVideoNotice('Đã tải và lưu video sản phẩm mới thành công!');
+                          window.dispatchEvent(new Event('product_video_updated'));
+                          setTimeout(() => setVideoNotice(null), 4000);
+                        } catch (err) {
+                          console.error(err);
+                          alert('Có lỗi khi lưu video. Vui lòng thử lại!');
+                        } finally {
+                          setVideoUploading(false);
+                        }
+                      }
+                    }}
+                    className="hidden"
+                  />
+
+                  <button
+                    type="button"
+                    disabled={videoUploading}
+                    onClick={() => adminVideoInputRef.current?.click()}
+                    className="px-4 py-2.5 bg-[#aa3000] hover:bg-[#d43f00] text-white rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{videoUploading ? 'Đang nạp video...' : 'Chọn File Video Từ Máy Tính'}</span>
+                  </button>
+                </div>
+
+                {videoNotice && (
+                  <p className="text-xs font-bold text-emerald-700 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
+                    ✓ {videoNotice}
+                  </p>
+                )}
+
+                {/* Preview if video uploaded */}
+                {currentVideoUrl && (
+                  <div className="space-y-2 border-t border-[#e0e3e5] pt-4">
+                    <h5 className="font-bold text-xs text-[#002045]">Video đang hiển thị trên trang:</h5>
+                    <div className="rounded-2xl overflow-hidden aspect-video bg-black max-w-sm">
+                      <video
+                        src={currentVideoUrl}
+                        controls
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

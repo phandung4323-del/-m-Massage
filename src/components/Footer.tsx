@@ -65,9 +65,16 @@ export const Footer: React.FC = () => {
             </a>
           </div>
 
-          <p className="text-xs text-[#74777f]">
-            © 2026 S-MALL. Bản quyền thuộc về Công ty TNHH Thiết Bị Sức Khỏe S-Mall Việt Nam.
-          </p>
+          <div className="flex items-center justify-center gap-2 text-xs text-[#74777f]">
+            <p>© 2026 S-MALL. Bản quyền thuộc về Công ty TNHH Thiết Bị Sức Khỏe S-Mall Việt Nam.</p>
+            <button
+              onClick={() => setIsAdminOpen(true)}
+              className="p-1 text-gray-400 hover:text-[#aa3000] transition-colors rounded-lg"
+              title="Quản trị viên"
+            >
+              <Lock className="w-3 h-3" />
+            </button>
+          </div>
         </div>
       </footer>
 
