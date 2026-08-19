@@ -1,22 +1,32 @@
 import { ReviewItem } from '../types';
 import heroImage from '../assets/images/hero_massage_cushion_1787023622792.jpg';
+import asianOfficeWorker from '../assets/images/asian_office_worker_1787039519299.jpg';
+import asianDriver from '../assets/images/asian_driver_1787039532984.jpg';
+import asianRemoteWorker from '../assets/images/asian_remote_worker_1787039546481.jpg';
+import asianWatchingTv from '../assets/images/asian_watching_tv_1787039560917.jpg';
+import realistic3DRoller from '../assets/images/realistic_3d_roller_1787039683135.jpg';
+import vietnameseHomeRelax from '../assets/images/vietnamese_home_relax_1787039895989.jpg';
+import vietnameseOfficeRelax from '../assets/images/vietnamese_office_relax_1787039915478.jpg';
+import vietnameseCarRelax from '../assets/images/vietnamese_car_relax_1787039936402.jpg';
+import vietnameseAvatarMale1 from '../assets/images/vietnamese_avatar_male1_1787040111739.jpg';
+import vietnameseAvatarMale2 from '../assets/images/vietnamese_avatar_male2_1787040134381.jpg';
+import vietnameseAvatarFemale from '../assets/images/vietnamese_avatar_female_1787040150686.jpg';
 
 export const PRODUCT_IMAGES = {
   hero: heroImage,
-  officeWorker: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBz3AWXfKy6j8SfcMLWU4WoQi-PNyHwbzkXbZ0ZRFNpyNd5hdVaUgI7JN-_L8eUmw8tjF6mhy1U1tbNxqjhbDaVDIohYg4pC3f0xLgKF-rGI5Dz9OwUchKlv1W5XCiOerDJ5U77mh7XeNEwrPbTepS7JqiswX5BjcyHCEPJm45VXX0xAYmIAh1JqLI2vURLp6aQ7Vp8eugIx2FrGAkbwSEkye7tuTpsWgZe6povx49YnxNai71JenbwAQ',
-
-  driver: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD4-zgGu-4LwirZ1zsDvIe-XRvf3RmVPX3B7PRacN2LDoLY7A0qZQKvu2V8ZZCNSppEt8igPaWXEPk7YHzk4ps0nv42KvF1mP0j-OB3v_Uc2KRw04Vo1APgD5km5RE6QcWJw0Zgl8cVBGNOmM-Aox9ioKZZzolwmhhRvsm0V0WBeaqS8qcia74e-JmixpLjYcqFyo-tf0lsBf8ahbGPGHKLA8VQvC2y2fk1zoCRNL_iefcepFOoH2sdaQ',
-  remoteWork: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCRx-ZLomjTQWjJZ5a_3K-VGDHHwhlbItFsxO7qvlG89YVSbbcgOlMHGRNe8tI5EtUMp254cAj0ZiDy1u0NmcT4NBjSmgPA9x2sGqmjEvF5GYHvNNcm0yV5mg1rJFk3rdm-buJ4D2amTDpSgPmeOvfItab0tqQLIMwTAwvC63JnnDVMm-_7jpEhWTJEyl-TE7YcgvtgThd58O7_tBUbiTDkCBLgsTKV4Axpcy962mhUNHFKbmJ-ITzACw',
-  watchingTv: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC60xGAXW92n7e45Fxzxm450di6g2qmWwybNCNVq3jBAIhES6lmD2URf98uxDz-vNRF6J6394IGmW44bJaWwfPNrCTGa_SH57n4GUteqqg61dzs-B1cR3Dj4i3kxIY_RUPZSMsO0qXcGQtKIKKk8gDvsm6CpQ5Gfk1UtwtrFWHxEdYbcTx9quiOAbuFlasuE6A_90DtT0DoXBN88o4KRaaRXC_AII_VqdcTg5-VfCrnGO9vWc30pBToIg',
+  officeWorker: asianOfficeWorker,
+  driver: asianDriver,
+  remoteWork: asianRemoteWorker,
+  watchingTv: asianWatchingTv,
   bodyDiagram: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAGZgiaxcNJYkgkG0jIiUhwmjKVPu-zo2uULs7lYd1iBu-L3mvgXXmey0_vPB2QmUjnzxZ4O_98ijHn2xe1B9Dz_e6llgMt4c29_2mvKzZE3W5DhCpjfMRPvZHpiJkG_WlblSbyYEAuFixhp5ooSVo9Femoa13N1qB2UYmkZJS8FI_Q7UVIzvx6k-7heN5JrQzWZaV4qfyDEI8P-zQTEmaTA4C-VNEfU02ZUYx2wmqARI6pes611iT9fQ',
   massageZones: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAZ4-lUayraUn00GLlRKfGxWoQ1SXv1HLR9_rDB1DSJEnrEtkDih_rSpWjMn5kkFpJRa0JP24V-K5VKs5C9rb7_DCvQILJEyf2-YjL6DyhTod1uphgAjrcHeLQvpLnCXU_DE-f5VZpLHDb8zMNQjEL_Fs-JH4hiXrTDNEaBkqdbxE9a6tUUcgrErspE10cUgImMq-V_qR6aoeVJNDlyBnvRnU8ZeBe00LzrFsbPOIkIzBdsTLtbenKz5A',
-  roller3D: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDd-CrPXxtbKUJp_AsmxaWRmtXDnbMZrzb_a43W3oAvmhWng54p296ai9fGsZX16GePUOs4UneUo9xrYDqysBkGLxhS5WXalt-beNiYDSl5zssj8qi8r9eHg6jCb4nsASUys9o_okMAYVrxSEgcVaO5IUtwezS1T34NZm75Y4-bzqUyJ4bRvgE-rnK6KtFGbOo-oCGo6Rqe5i0aLwwN5WjQKi0FhsHfkTMBgy3aNSmqHBokIS96c8fYfA',
+  roller3D: realistic3DRoller,
   backTrack: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD4UhpufUgRTOV0woW6geMk4Az-a4prkZ94ovtx7fMm4JjNmB5sLqW9rp1IkzQKgWes7v46DitwVdhfL9hp0PxydohzMGDrfOG6w3dQmf--63npqO_JbjwmkxlBcz_kAYbKnyM3dhx-erLokuN9-XOweY0PiDwZW1bfsBup2wNmgkKTOOzp80zNIJzgIqQypzAQafN50EPDjsviOnoF95snStKY2kokxRpoVOJQdu7PsIa-tN1nRuB9nw',
   vibrationSeat: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCObx9ZzrrfUmSB_TP0DbIpjkS_7-3H_nEa5Q-_h2OvapMBHRRfhGqnqZKORtvbB213YPw5fXGq1Kgm7b-hof4O1TIA5Nd60lGuE3oYRFiFeuLbF4NlTBrrKp81xn1wvUgaXTiQQ5wYbxVWZVjflJBMfWpopu25ZFjWtL8fmBznIbu826m4MT55s2nCqjpQTnl2yO_rT9e0bZIYB7P8nks6keifl6YHbIpTZh390eSbeG8cFinqr3fsRw',
   remoteControl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCETwU4tC-8R2JQQ0TAQD2scaUEK_SR9Y8a264DB7C5H9P3Rg8t4cntaXCDDanqdrnM9hMswisxJOUkGtaz3GtLQ6BoXIzOdTqHCeyJN01V_CRaPimPPcuIXc_7het3o_YsqG0mZ31q-EeVvvFq6dF4mf2XmP_-SJzWb6VcOx732IgxlouVMtkBj-WXENnykshFNEHO6RU14WlA3AAZkEF_KeY8By0FYVSuLcO6UdTgUVweNlmkquZVkA',
-  lifestyleHome: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDI6lyWyku-WHsEHUkTtLKGC0O0QRaS38JqdaFuuNqMXoVOcAiZHs1mqfZ1GcD34Gor41Bd21dmPiIQ_cCKnBZPZjp0EWfno-nNpqdj1jTxHnF5dEalDVSUlyLiv4GLKnh28AJhmXdz8fiOvGgRhD6G539CdyX-HT44sClQur-4nRfr40ulvH02jm-S8DnBvFkJaXlqUcw2M6nidbt0HEJ_YdrW8bcuk6e_NriNwDivhj0jwn1vzGWnyA',
-  lifestyleOffice: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD5eYr6ve2py5DD17tbi95vZvs6JZEXG_o1SfZ_ei2KntkH1K_zgR4hJTE61M6Qd6zCO9zYwI8-LKQjxkagnN_c8O91qr54nFdVemXv3p1oXqb0tvTdXbQGp55eAH2PuWFqxWncf2GVTCbO6Q_EKjSH0qG-xumcmrqjhDPM0KXYlZAHor2IzUU3_8asqRKCQ8e2zOHnG708J6GhoL7UIq6e4U4JoImUC2N0LwwaqeEgWeRpDp_EM7gnSQ',
-  lifestyleCar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBLwggwWNVXYY7Il7SpDgxl_vb6LK0YlUNcwxzjAZ2-CGVzSkKT5LqvQ6yYz-Yd44Bx3_F7aoWlEPfwBHaRaOpwQa5V__m7O9U4vBDeJQWRYN7qw6QlvaC5LopDXPSUoSChK_z_6kF_BDuumk7EvyoakfXXH5C1MQDKsJNGHKV3i1E8pBKWdS52_hICDGN_9ySrK5-TZteMOMCvHOdqBnRq8ExaVtJ_nYp1GdafRXweGSyNjL7xvj2HGw',
+  lifestyleHome: vietnameseHomeRelax,
+  lifestyleOffice: vietnameseOfficeRelax,
+  lifestyleCar: vietnameseCarRelax,
 };
 
 export const PRICING_PACKAGES = [
@@ -134,7 +144,7 @@ export const REVIEWS: ReviewItem[] = [
     id: 'r1',
     name: 'Nguyễn Văn Hùng',
     role: 'Lập trình viên (Hà Nội)',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+    avatar: vietnameseAvatarMale1,
     rating: 5,
     comment: 'Mình ngồi code cả ngày cổ gáy cứng đờ. Mua đệm này để ở ghế văn phòng, giờ trưa cắm vào 15 phút là nhẹ cả người, đầu óc tỉnh táo hẳn. Bi lăn êm và có nhiệt ấm rất dễ chịu!',
     date: '2 ngày trước',
@@ -145,7 +155,7 @@ export const REVIEWS: ReviewItem[] = [
     id: 'r2',
     name: 'Trần Minh Quang',
     role: 'Tài xế công nghệ (TP.HCM)',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+    avatar: vietnameseAvatarMale2,
     rating: 5,
     comment: 'Chạy xe 10 tiếng mỗi ngày lưng với hông đau buốt. May có tẩu cắm 12V trên ô tô, những lúc chờ khách mình bật chế độ rung với nhiệt lên, lưng đỡ mỏi hẳn. Đáng đồng tiền!',
     date: '5 ngày trước',
@@ -156,7 +166,7 @@ export const REVIEWS: ReviewItem[] = [
     id: 'r3',
     name: 'Lê Thị Thu Hà',
     role: 'Kế toán trưởng (Đà Nẵng)',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
+    avatar: vietnameseAvatarFemale,
     rating: 5,
     comment: 'Đệm bọc da PU rất sang, đường may tỉ mỉ. Mình mua cho cả ba mẹ ở quê dùng nữa, ông bà khen nức nở vì buổi tối nằm massage có sưởi ấm ngủ rất ngon giấc.',
     date: '1 tuần trước',

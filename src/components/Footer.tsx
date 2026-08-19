@@ -27,8 +27,11 @@ export const Footer: React.FC = () => {
             <div className="flex items-start gap-2.5">
               <MapPin className="w-4 h-4 text-[#aa3000] shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold text-[#1a365d]">Địa chỉ trụ sở:</p>
-                <p className="text-[#43474e]">Tòa nhà S-Mall Center, Cầu Giấy, Hà Nội & Quận 1, TP. Hồ Chí Minh</p>
+                <p className="font-bold text-[#1a365d]">Hệ thống cơ sở:</p>
+                <p className="text-[#43474e] leading-relaxed">
+                  <span className="font-semibold text-[#1a365d]">Cơ Sở 1:</span> Cầu Giấy, Hà Nội<br />
+                  <span className="font-semibold text-[#1a365d]">Cơ Sở 2:</span> Quận 1, TP. Hồ Chí Minh
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-2.5">
