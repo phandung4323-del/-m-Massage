@@ -94,28 +94,15 @@ export const HeatAndVibrationSection: React.FC = () => {
           Xem video thực tế hướng dẫn sử dụng đệm massage S-MALL: Con lăn xoay 3D mô phỏng bàn tay người thật, sưởi ấm hồng ngoại và rung thư giãn toàn thân.
         </p>
 
-        {/* Video Player Box - Protected against downloading or public altering */}
-        <div className="relative bg-[#001026] rounded-3xl overflow-hidden shadow-2xl border-2 border-[#002045] max-w-3xl mx-auto aspect-video flex items-center justify-center">
-          {serverVideoUrl ? (
-            <video
-              src={serverVideoUrl}
-              controls
-              playsInline
-              controlsList="nodownload noplaybackrate"
-              disablePictureInPicture
-              onContextMenu={(e) => e.preventDefault()}
-              poster={videoPoster}
-              className="w-full h-full object-contain bg-black"
-            />
-          ) : (
-            <iframe
-              src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0&modestbranding=1"
-              title="Video trải nghiệm đệm massage S-MALL"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              className="w-full h-full border-0"
-            />
-          )}
+        {/* Video Player Box */}
+        <div className="relative bg-[#001026] rounded-3xl overflow-hidden shadow-2xl border-2 border-[#002045] max-w-2xl mx-auto aspect-video sm:aspect-16/9 flex items-center justify-center">
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/DnKqDNkLSfg?rel=0&modestbranding=1&controls=1"
+            title="Video trải nghiệm đệm massage S-MALL"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            className="w-full h-full border-0"
+          />
         </div>
 
         {/* 6 Core Product Highlights */}
